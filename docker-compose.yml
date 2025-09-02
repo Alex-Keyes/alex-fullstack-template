@@ -19,14 +19,6 @@ services:
       - POSTGRES_USER=${POSTGRES_USER?Variable not set}
       - POSTGRES_DB=${POSTGRES_DB?Variable not set}
 
-  adminer:
-    image: adminer
-    restart: always
-    depends_on:
-      - db
-    environment:
-      - ADMINER_DESIGN=pepa-linha-dark
-
   prestart:
     image: '${DOCKER_IMAGE_BACKEND?Variable not set}:${TAG-latest}'
     build:
