@@ -137,6 +137,12 @@ Then, you can run the tests with the following command:
 npx playwright test
 ```
 
+Install browsers (first time only):
+
+```bash
+npm run test:e2e:install
+```
+
 You can also run your tests in UI mode to see the browser and interact with it running:
 
 ```bash
