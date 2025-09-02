@@ -12,20 +12,36 @@ os.environ.setdefault("POSTGRES_USER", os.getenv("POSTGRES_USER", "postgres"))
 os.environ.setdefault("POSTGRES_PASSWORD", os.getenv("POSTGRES_PASSWORD", "postgres"))
 
 import pytest
-from sqlmodel import SQLModel
+from sqlmodel import SQLModel, create_engine
 
-from app.core.db import engine
-from app.backend_pre_start import init as wait_for_db
+import app.core.db as core_db
+import app.api.deps as deps
 
 
 @pytest.fixture(scope="session", autouse=True)
 def _create_database_schema() -> None:
-    # Wait for database to be ready (retries up to ~5 minutes)
-    wait_for_db(engine)
+    # Prefer SQLite for tests unless TEST_DB=postgres is set
+    engine_to_use = None
+    if os.getenv("TEST_DB", "sqlite").lower() == "sqlite":
+        sqlite_url = "sqlite:///./test.db"
+        sqlite_engine = create_engine(
+            sqlite_url, connect_args={"check_same_thread": False}
+        )
+        # Override engines used by the app
+        core_db.engine = sqlite_engine
+        deps.engine = sqlite_engine
+        engine_to_use = sqlite_engine
+    else:
+        from app.core.db import engine as pg_engine
+        from app.backend_pre_start import init as wait_for_db
+
+        wait_for_db(pg_engine)
+        engine_to_use = pg_engine
+
     # Create all tables for tests; drop them after session ends
-    SQLModel.metadata.create_all(engine)
+    SQLModel.metadata.create_all(engine_to_use)
     try:
         yield
     finally:
-        SQLModel.metadata.drop_all(engine)
+        SQLModel.metadata.drop_all(engine_to_use)
 
