@@ -66,6 +66,12 @@ export const ColorModeButton = React.forwardRef<
             width: "5",
             height: "5",
           },
+          _hover: {
+            backgroundColor: "gray.200",
+            _dark: {
+              backgroundColor: "gray.700",
+            },
+          },
         }}
       >
         <ColorModeIcon />
