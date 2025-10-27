@@ -1,0 +1,9 @@
+{
+  "name": "root",
+  "private": true,
+  "scripts": {
+    "test": "npm run -w frontend test:e2e && uv run -q --directory backend pytest",
+    "test:ci": "uv run -q --directory backend pytest && npm run -w frontend test:e2e"
+  }
+}
+

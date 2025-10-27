@@ -29,6 +29,9 @@ dev-dependencies = [
     "ruff<1.0.0,>=0.2.2",
     "pre-commit<4.0.0,>=3.6.2",
     "types-passlib<2.0.0.0,>=1.7.7.20240106",
+    "pytest<9.0.0,>=8.2.0",
+    "httpx<1.0.0,>=0.27.0",
+    "pytest-anyio<1.0.0,>=0.0.0",
 ]
 
 [build-system]
