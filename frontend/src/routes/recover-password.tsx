@@ -1,93 +1,82 @@
-import { Container, Heading, Input, Text } from "@chakra-ui/react"
-import { useMutation } from "@tanstack/react-query"
-import { createFileRoute, redirect } from "@tanstack/react-router"
-import { type SubmitHandler, useForm } from "react-hook-form"
-import { FiMail } from "react-icons/fi"
+import { Container, Heading, Input, Text } from '@chakra-ui/react'
+import { createFileRoute } from '@tanstack/react-router'
+import { type SubmitHandler, useForm } from 'react-hook-form'
+import { FiMail } from 'react-icons/fi'
 
-import { type ApiError, LoginService } from "@/client"
-import { Button } from "@/components/ui/button"
-import { Field } from "@/components/ui/field"
-import { InputGroup } from "@/components/ui/input-group"
-import { isLoggedIn } from "@/hooks/useAuth"
-import useCustomToast from "@/hooks/useCustomToast"
-import { emailPattern, handleError } from "@/utils"
+import { Button } from '@/components/ui/button'
+import { Field } from '@/components/ui/field'
+import { InputGroup } from '@/components/ui/input-group'
+import { useAuth } from '@/hooks/useAuth'
+import { useCustomToast } from '@/hooks/useCustomToast'
+import { emailPattern } from '@/utils'
+import { useState } from 'react'
 
-interface FormData {
-  email: string
-}
-
-export const Route = createFileRoute("/recover-password")({
+export const Route = createFileRoute('/recover-password')({
   component: RecoverPassword,
-  beforeLoad: async () => {
-    if (isLoggedIn()) {
-      throw redirect({
-        to: "/",
-      })
-    }
-  },
 })
 
 function RecoverPassword() {
+  const { resetPassword } = useAuth()
+  const [error, setError] = useState<string | null>(null)
   const {
     register,
     handleSubmit,
     reset,
     formState: { errors, isSubmitting },
-  } = useForm<FormData>()
-  const { showSuccessToast } = useCustomToast()
-
-  const recoverPassword = async (data: FormData) => {
-    await LoginService.recoverPassword({
-      email: data.email,
-    })
-  }
-
-  const mutation = useMutation({
-    mutationFn: recoverPassword,
-    onSuccess: () => {
-      showSuccessToast("Password recovery email sent successfully.")
-      reset()
-    },
-    onError: (err: ApiError) => {
-      handleError(err)
+  } = useForm({
+    defaultValues: {
+      email: '',
     },
   })
+  const { showSuccessToast } = useCustomToast()
 
-  const onSubmit: SubmitHandler<FormData> = async (data) => {
-    mutation.mutate(data)
+  const onSubmit: SubmitHandler<any> = async (data) => {
+    if (isSubmitting) return
+    setError(null)
+
+    const { error } = await resetPassword(data.email)
+    if (error) {
+      setError(error.message)
+    } else {
+      showSuccessToast({
+        title: 'Password recovery email sent',
+        description: 'Please check your email for the recovery link.',
+      })
+      reset()
+    }
   }
 
   return (
     <Container
-      as="form"
+      as='form'
       onSubmit={handleSubmit(onSubmit)}
-      h="100vh"
-      maxW="sm"
-      alignItems="stretch"
-      justifyContent="center"
+      h='100vh'
+      maxW='sm'
+      alignItems='stretch'
+      justifyContent='center'
       gap={4}
       centerContent
     >
-      <Heading size="xl" color="ui.main" textAlign="center" mb={2}>
+      <Heading size='xl' color='ui.main' textAlign='center' mb={2}>
         Password Recovery
       </Heading>
-      <Text textAlign="center">
+      <Text textAlign='center'>
         A password recovery email will be sent to the registered account.
       </Text>
-      <Field invalid={!!errors.email} errorText={errors.email?.message}>
-        <InputGroup w="100%" startElement={<FiMail />}>
+      <Field invalid={!!errors.email || !!error} errorText={errors.email?.message || error || ''}>
+        <InputGroup w='100%' startElement={<FiMail />}>
           <Input
-            id="email"
-            {...register("email", {
-              required: "Email is required",
+            id='email'
+            {...register('email', {
+              required: 'Email is required',
               pattern: emailPattern,
             })}
-            placeholder="Email"
-            type="email"
+            placeholder='Email'
+            type='email'
           />
         </InputGroup>
       </Field>
-      <Button variant="solid" type="submit" loading={isSubmitting}>
+      <Button variant='solid' type='submit' loading={isSubmitting}>
         Continue
       </Button>
     </Container>

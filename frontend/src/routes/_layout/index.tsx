@@ -22,12 +22,34 @@ import {
   FaCheckCircle,
   FaTimesCircle,
   FaQuoteLeft,
+  FaExclamationTriangle,
 } from "react-icons/fa"
 import { Button } from "@/components/ui/button"
+import { useAuth } from "@/hooks/useAuth"
 
 export const Route = createFileRoute("/_layout/")({
   component: LandingPage,
 })
+
+const SupabaseConfigAlert = () => {
+  const { hasSupabaseConfig } = useAuth()
+  
+  if (hasSupabaseConfig) return null
+
+  return (
+    <Box bg="orange.100" color="orange.800" p={4} borderRadius="md" mb={8} border="1px solid" borderColor="orange.200">
+      <Flex align="center" gap={3}>
+        <Icon as={FaExclamationTriangle} />
+        <Box>
+          <Text fontWeight="bold">Supabase Not Configured</Text>
+          <Text fontSize="sm">
+            Please set <code>VITE_SUPABASE_URL</code> and <code>VITE_SUPABASE_ANON_KEY</code> in your <code>frontend/.env</code> file to enable authentication features.
+          </Text>
+        </Box>
+      </Flex>
+    </Box>
+  )
+}
 
 const testimonials = [
   {
@@ -36,12 +58,12 @@ const testimonials = [
     role: "Founder, Launchpad SaaS",
   },
   {
-    quote: "Finally a fullstack template that doesn't make me feel like I'm fighting the framework.",
+    quote: "Finally a frontend template that doesn't make me feel like I'm fighting the backend.",
     name: "Marcus T.",
     role: "CTO, DevFlow",
   },
   {
-    quote: "Auth, API, and frontend all wired up out of the box. It's like hiring an extra engineer.",
+    quote: "Auth and frontend all wired up out of the box. It's like hiring an extra engineer.",
     name: "Priya N.",
     role: "Lead Developer, Workstream",
   },
@@ -53,35 +75,35 @@ const features = [
     color: "blue.500",
     title: "Ship in Days, Not Months",
     description:
-      "Pre-built auth, user management, and a typed API client mean you start with the hard parts already done.",
+      "Pre-built auth and user management mean you start with the hard parts already done.",
   },
   {
     icon: FaShieldAlt,
     color: "green.500",
     title: "Production-Ready Security",
     description:
-      "JWT auth, password hashing, and role-based access control baked in from day one — no bolting it on later.",
+      "Supabase Auth and role-based access control baked in from day one — no bolting it on later.",
   },
   {
     icon: FaCog,
     color: "purple.500",
-    title: "Fully Typed End-to-End",
+    title: "Fully Typed Frontend",
     description:
-      "OpenAPI-generated TypeScript client keeps your frontend and backend in sync automatically.",
+      "TypeScript throughout the entire project keeps your code clean and maintainable.",
   },
   {
     icon: FaUsers,
     color: "orange.500",
-    title: "User & Team Management",
+    title: "User Management",
     description:
-      "Admin panel, user settings, and multi-user support built in. Manage your users without building the tooling.",
+      "User settings and profile management built in. Manage your users without building the tooling.",
   },
   {
     icon: FaChartLine,
     color: "teal.500",
     title: "Scalable Architecture",
     description:
-      "FastAPI + React + PostgreSQL stack trusted at scale. Containerized with Docker for easy deployment anywhere.",
+      "React + Supabase stack trusted at scale. Frontend-only architecture for easy deployment anywhere.",
   },
   {
     icon: FaLightbulb,
@@ -101,7 +123,7 @@ const pricingPlans = [
     features: [
       "Full source code access",
       "Auth & user management",
-      "FastAPI + React stack",
+      "React + Supabase stack",
       "Community support",
     ],
     cta: "Get Started Free",
@@ -141,7 +163,7 @@ const pricingPlans = [
 
 const faqs = [
   {
-    q: "Do I need to know FastAPI or React to use this?",
+    q: "Do I need to know Supabase or React to use this?",
     a: "Basic familiarity helps, but the template is designed to be readable and well-structured. Most developers are productive within an hour.",
   },
   {
@@ -154,7 +176,7 @@ const faqs = [
   },
   {
     q: "How is this different from other boilerplates?",
-    a: "Most boilerplates give you a skeleton. This one gives you a working product: auth flows, admin panel, user settings, and a typed API client — all connected.",
+    a: "Most boilerplates give you a skeleton. This one gives you a working product: auth flows and user settings — all connected to Supabase.",
   },
   {
     q: "Will I get updates when new features are added?",
@@ -166,25 +188,26 @@ const faqs = [
   },
   {
     q: "What database does this use?",
-    a: "PostgreSQL by default, managed via SQLModel. You can swap it out, but Postgres is well-supported and battle-tested.",
+    a: "Supabase (PostgreSQL) by default. It's well-supported and battle-tested.",
   },
 ]
 
 function LandingPage() {
   return (
     <Box>
+      <SupabaseConfigAlert />
       {/* ── Hero ── */}
       <Box py={{ base: 20, md: 32 }} px={4} textAlign="center">
         <Container maxW="4xl">
           <Stack gap={6} align="center">
             <Badge colorScheme="teal" fontSize="sm" px={3} py={1} borderRadius="full">
-              Fullstack Template
+              Frontend Template
             </Badge>
             <Heading size={{ base: "3xl", md: "5xl" }} fontWeight="extrabold" lineHeight="shorter">
               Launch Your SaaS in Days, Not Months
             </Heading>
             <Text fontSize={{ base: "lg", md: "xl" }} color="fg.muted" maxW="2xl">
-              A production-ready fullstack template with auth, user management, typed API, and a
+              A production-ready template with auth, user management, and a
               polished UI — so you can ship your product instead of rebuilding the same foundation
               every time.
             </Text>
@@ -241,7 +264,7 @@ function LandingPage() {
               </Heading>
               <Text fontSize="lg" color="fg.muted">
                 Most developers start a new project the same way: cobble together auth, wire up a
-                database, generate an API client, configure linting... before writing a single line
+                database, configure linting... before writing a single line
                 of real product code.
               </Text>
             </Box>
@@ -254,7 +277,7 @@ function LandingPage() {
               {[
                 "Weeks wasted on boilerplate that isn't your product",
                 "Security holes from DIY auth rolled under time pressure",
-                "Frontend and backend drift apart as the team grows",
+                "Frontend architecture that's hard to scale",
               ].map((pain) => (
                 <GridItem key={pain}>
                   <Flex
@@ -315,8 +338,8 @@ function LandingPage() {
             >
               {[
                 "Go from clone to running app in under 10 minutes",
-                "Ship with confidence — auth and security handled correctly",
-                "Your frontend and backend stay in sync automatically",
+                "Ship with confidence — auth and security handled by Supabase",
+                "Focus purely on your product features",
               ].map((benefit) => (
                 <GridItem key={benefit}>
                   <Flex
@@ -388,7 +411,7 @@ function LandingPage() {
                 Everything you need, nothing you don't
               </Heading>
               <Text fontSize="lg" color="fg.muted" maxW="2xl">
-                Four categories of features that cover the full lifecycle of a production SaaS app.
+                Features that cover the full lifecycle of a production SaaS app.
               </Text>
             </Box>
 
@@ -443,8 +466,8 @@ function LandingPage() {
             </Box>
 
             <Text fontSize="lg" color="fg.muted">
-              Every project I started began the same way — three days wiring up auth, a day on the
-              API client, another configuring Docker. I was rebuilding the same foundation over and
+              Every project I started began the same way — three days wiring up auth, another day
+              configuring a backend. I was rebuilding the same foundation over and
               over while the actual product sat waiting.
             </Text>
             <Text fontSize="lg" color="fg.muted">
@@ -562,7 +585,7 @@ function LandingPage() {
         <Container maxW="6xl">
           <Flex justify="space-between" align="center" wrap="wrap" gap={4}>
             <Text color="fg.muted" fontSize="sm">
-              © {new Date().getFullYear()} Alex Fullstack Template. Built with FastAPI + React.
+              © {new Date().getFullYear()} Alex Fullstack Template. Built with React + Supabase.
             </Text>
             <Stack direction="row" gap={4}>
               <Link to="/login">

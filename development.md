@@ -1,191 +1,60 @@
-# FastAPI Project - Development
+# Supabase Fullstack Template - Development
 
-## Docker Compose
+## Overview
 
-* Start the local stack with Docker Compose:
+This project is a frontend-only architecture backed by Supabase. It uses React (Vite), Chakra UI, TanStack Router, and TanStack Query.
 
-```bash
-docker compose watch
-```
+## Setup
 
-* Now you can open your browser and interact with these URLs:
+1.  **Clone and Clean:**
+    Clone the repository and (optionally) wipe the git history if starting a new project.
 
-Frontend, built with Docker, with routes handled based on the path: http://localhost:5173
+2.  **Supabase Project:**
+    - Create a new project at [supabase.com](https://supabase.com).
+    - Enable Email Auth in the Authentication settings.
+    - Run `supabase init` in the root (optional, if you want to use Supabase CLI for migrations).
 
-Backend, JSON based web API based on OpenAPI: http://localhost:8000
+3.  **Environment Variables:**
+    Copy `frontend/.env.example` to `frontend/.env` and fill in your Supabase URL and Anon Key:
+    ```bash
+    cp frontend/.env.example frontend/.env
+    ```
+    ```dotenv
+    VITE_SUPABASE_URL=your-project-url
+    VITE_SUPABASE_ANON_KEY=your-anon-key
+    ```
 
-Automatic interactive documentation with Swagger UI (from the OpenAPI backend): http://localhost:8000/docs
+4.  **Install Dependencies:**
+    ```bash
+    cd frontend
+    npm install
+    ```
 
- 
+5.  **Run Development Server:**
+    ```bash
+    npm run dev
+    ```
+    The app will be available at `http://localhost:5173`.
 
-**Note**: The first time you start your stack, it might take a minute for it to be ready. While the backend waits for the database to be ready and configures everything. You can check the logs to monitor it.
+## Architecture
 
-To check the logs, run (in another terminal):
+- **Frontend:** Vite + React + TypeScript
+- **UI Components:** Chakra UI v3
+- **Routing:** TanStack Router
+- **Data Fetching:** TanStack Query
+- **Authentication:** Supabase Auth via `@supabase/supabase-js`
+- **Linting & Formatting:** Biome
 
-```bash
-docker compose logs
-```
+## Authentication Flow
 
-To check the logs of a specific service, add the name of the service, e.g.:
+The app uses a custom `useAuth` hook and `AuthProvider` (in `frontend/src/hooks/useAuth.ts`) to manage session state. 
 
-```bash
-docker compose logs backend
-```
+- On mount, it checks for an existing session.
+- It listens for auth state changes (sign in, sign out, user updates).
+- Protected routes are guarded in `frontend/src/routes/_layout.tsx`.
 
-## Local Development
+## Key Commands
 
-The Docker Compose files are configured so that each of the services is available in a different port in `localhost`.
-
-For the backend and frontend, they use the same port that would be used by their local development server, so, the backend is at `http://localhost:8000` and the frontend at `http://localhost:5173`.
-
-This way, you could turn off a Docker Compose service and start its local development service, and everything would keep working, because it all uses the same ports.
-
-For example, you can stop that `frontend` service in the Docker Compose, in another terminal, run:
-
-```bash
-docker compose stop frontend
-```
-
-And then start the local frontend development server:
-
-```bash
-cd frontend
-npm run dev
-```
-
-Or you could stop the `backend` Docker Compose service:
-
-```bash
-docker compose stop backend
-```
-
-And then you can run the local development server for the backend:
-
-```bash
-cd backend
-fastapi dev app/main.py
-```
-
-## Docker Compose in `localhost.tiangolo.com`
-
-When you start the Docker Compose stack, it uses `localhost` by default, with different ports for each service (backend and frontend).
-
-When you deploy it to production (or staging), it will deploy each service in a different subdomain, like `api.example.com` for the backend and `dashboard.example.com` for the frontend.
-
-If you want to test that it's all working locally, you can edit the local `.env` file, and change:
-
-```dotenv
-DOMAIN=localhost.tiangolo.com
-```
-
-That will be used by the Docker Compose files to configure the base domain for the services.
-
-The domain `localhost.tiangolo.com` is a special domain that is configured (with all its subdomains) to point to `127.0.0.1`. This way you can use that for your local development.
-
-After you update it, run again:
-
-```bash
-docker compose watch
-```
-
-## Docker Compose files and env vars
-
-There is a main `docker-compose.yml` file with all the configurations that apply to the whole stack, it is used automatically by `docker compose`.
-
-And there's also a `docker-compose.override.yml` with overrides for development, for example to mount the source code as a volume. It is used automatically by `docker compose` to apply overrides on top of `docker-compose.yml`.
-
-These Docker Compose files use the `.env` file containing configurations to be injected as environment variables in the containers.
-
-They also use some additional configurations taken from environment variables set in the scripts before calling the `docker compose` command.
-
-After changing variables, make sure you restart the stack:
-
-```bash
-docker compose watch
-```
-
-## The .env file
-
-The `.env` file is the one that contains all your configurations, generated keys and passwords, etc.
-
-Depending on your workflow, you could want to exclude it from Git, for example if your project is public. In that case, you would have to make sure to set up a way for your CI tools to obtain it while building or deploying your project.
-
-One way to do it could be to add each environment variable to your CI/CD system, and updating the `docker-compose.yml` file to read that specific env var instead of reading the `.env` file.
-
-## Pre-commits and code linting
-
-we are using a tool called [pre-commit](https://pre-commit.com/) for code linting and formatting.
-
-When you install it, it runs right before making a commit in git. This way it ensures that the code is consistent and formatted even before it is committed.
-
-You can find a file `.pre-commit-config.yaml` with configurations at the root of the project.
-
-#### Install pre-commit to run automatically
-
-`pre-commit` is already part of the dependencies of the project, but you could also install it globally if you prefer to, following [the official pre-commit docs](https://pre-commit.com/).
-
-After having the `pre-commit` tool installed and available, you need to "install" it in the local repository, so that it runs automatically before each commit.
-
-Using `uv`, you could do it with:
-
-```bash
-❯ uv run pre-commit install
-pre-commit installed at .git/hooks/pre-commit
-```
-
-Now whenever you try to commit, e.g. with:
-
-```bash
-git commit
-```
-
-...pre-commit will run and check and format the code you are about to commit, and will ask you to add that code (stage it) with git again before committing.
-
-Then you can `git add` the modified/fixed files again and now you can commit.
-
-#### Running pre-commit hooks manually
-
-you can also run `pre-commit` manually on all the files, you can do it using `uv` with:
-
-```bash
-❯ uv run pre-commit run --all-files
-check for added large files..............................................Passed
-check toml...............................................................Passed
-check yaml...............................................................Passed
-ruff.....................................................................Passed
-ruff-format..............................................................Passed
-eslint...................................................................Passed
-prettier.................................................................Passed
-```
-
-## URLs
-
-The production or staging URLs would use these same paths, but with your own domain.
-
-### Development URLs
-
-Development URLs, for local development.
-
-Frontend: http://localhost:5173
-
-Backend: http://localhost:8000
-
-Automatic Interactive Docs (Swagger UI): http://localhost:8000/docs
-
-Automatic Alternative Docs (ReDoc): http://localhost:8000/redoc
-
- 
-
-### Development URLs with `localhost.tiangolo.com` Configured
-
-Development URLs, for local development.
-
-Frontend: http://dashboard.localhost.tiangolo.com
-
-Backend: http://api.localhost.tiangolo.com
-
-Automatic Interactive Docs (Swagger UI): http://api.localhost.tiangolo.com/docs
-
-Automatic Alternative Docs (ReDoc): http://api.localhost.tiangolo.com/redoc
-
- 
+- `npm run dev`: Start development server
+- `npm run build`: Build for production
+- `npm run lint`: Run Biome linting and formatting

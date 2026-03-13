@@ -7,38 +7,30 @@ import {
   Input,
   Text,
 } from "@chakra-ui/react"
-import { useMutation, useQueryClient } from "@tanstack/react-query"
 import { useState } from "react"
 import { type SubmitHandler, useForm } from "react-hook-form"
 
-import {
-  type ApiError,
-  type UserPublic,
-  type UserUpdateMe,
-  UsersService,
-} from "@/client"
-import useAuth from "@/hooks/useAuth"
-import useCustomToast from "@/hooks/useCustomToast"
-import { emailPattern, handleError } from "@/utils"
+import { useAuth } from "@/hooks/useAuth"
+import { useCustomToast } from "@/hooks/useCustomToast"
+import { emailPattern } from "@/utils"
 import { Field } from "../ui/field"
 
 const UserInformation = () => {
-  const queryClient = useQueryClient()
   const { showSuccessToast } = useCustomToast()
   const [editMode, setEditMode] = useState(false)
-  const { user: currentUser } = useAuth()
+  const { user: currentUser, updateUser } = useAuth()
   const {
     register,
     handleSubmit,
     reset,
     getValues,
     formState: { isSubmitting, errors, isDirty },
-  } = useForm<UserPublic>({
+  } = useForm({
     mode: "onBlur",
     criteriaMode: "all",
     defaultValues: {
-      full_name: currentUser?.full_name,
-      email: currentUser?.email,
+      full_name: currentUser?.user_metadata?.full_name || "",
+      email: currentUser?.email || "",
     },
   })
 
@@ -46,22 +38,20 @@ const UserInformation = () => {
     setEditMode(!editMode)
   }
 
-  const mutation = useMutation({
-    mutationFn: (data: UserUpdateMe) =>
-      UsersService.updateUserMe({ requestBody: data }),
-    onSuccess: () => {
-      showSuccessToast("User updated successfully.")
-    },
-    onError: (err: ApiError) => {
-      handleError(err)
-    },
-    onSettled: () => {
-      queryClient.invalidateQueries()
-    },
-  })
-
-  const onSubmit: SubmitHandler<UserUpdateMe> = async (data) => {
-    mutation.mutate(data)
+  const onSubmit: SubmitHandler<any> = async (data) => {
+    const { error } = await updateUser({
+      email: data.email,
+      data: { full_name: data.full_name },
+    })
+    if (error) {
+      // handle error
+    } else {
+      showSuccessToast({
+        title: "User updated successfully.",
+        description: data.email !== currentUser?.email ? "Please check your email to confirm the change." : undefined
+      })
+      setEditMode(false)
+    }
   }
 
   const onCancel = () => {
@@ -70,80 +60,78 @@ const UserInformation = () => {
   }
 
   return (
-    <>
-      <Container maxW="full">
-        <Heading size="sm" py={4}>
-          User Information
-        </Heading>
-        <Box
-          w={{ sm: "full", md: "sm" }}
-          as="form"
-          onSubmit={handleSubmit(onSubmit)}
-        >
-          <Field label="Full name">
-            {editMode ? (
-              <Input
-                {...register("full_name", { maxLength: 30 })}
-                type="text"
-                size="md"
-              />
-            ) : (
-              <Text
-                fontSize="md"
-                py={2}
-                color={!currentUser?.full_name ? "gray" : "inherit"}
-                truncate
-                maxW="sm"
-              >
-                {currentUser?.full_name || "N/A"}
-              </Text>
-            )}
-          </Field>
-          <Field
-            mt={4}
-            label="Email"
-            invalid={!!errors.email}
-            errorText={errors.email?.message}
-          >
-            {editMode ? (
-              <Input
-                {...register("email", {
-                  required: "Email is required",
-                  pattern: emailPattern,
-                })}
-                type="email"
-                size="md"
-              />
-            ) : (
-              <Text fontSize="md" py={2} truncate maxW="sm">
-                {currentUser?.email}
-              </Text>
-            )}
-          </Field>
-          <Flex mt={4} gap={3}>
-            <Button
-              variant="solid"
-              onClick={toggleEditMode}
-              type={editMode ? "button" : "submit"}
-              loading={editMode ? isSubmitting : false}
-              disabled={editMode ? !isDirty || !getValues("email") : false}
+    <Container maxW="full">
+      <Heading size="sm" py={4}>
+        User Information
+      </Heading>
+      <Box
+        w={{ sm: "full", md: "sm" }}
+        as="form"
+        onSubmit={handleSubmit(onSubmit)}
+      >
+        <Field label="Full name">
+          {editMode ? (
+            <Input
+              {...register("full_name", { maxLength: 30 })}
+              type="text"
+              size="md"
+            />
+          ) : (
+            <Text
+              fontSize="md"
+              py={2}
+              color={!currentUser?.user_metadata?.full_name ? "gray" : "inherit"}
+              truncate
+              maxW="sm"
             >
-              {editMode ? "Save" : "Edit"}
+              {currentUser?.user_metadata?.full_name || "N/A"}
+            </Text>
+          )}
+        </Field>
+        <Field
+          mt={4}
+          label="Email"
+          invalid={!!errors.email}
+          errorText={errors.email?.message}
+        >
+          {editMode ? (
+            <Input
+              {...register("email", {
+                required: "Email is required",
+                pattern: emailPattern,
+              })}
+              type="email"
+              size="md"
+            />
+          ) : (
+            <Text fontSize="md" py={2} truncate maxW="sm">
+              {currentUser?.email}
+            </Text>
+          )}
+        </Field>
+        <Flex mt={4} gap={3}>
+          <Button
+            variant="solid"
+            onClick={editMode ? undefined : toggleEditMode}
+            type={editMode ? "submit" : "button"}
+            loading={isSubmitting}
+            disabled={editMode ? !isDirty || !getValues("email") : false}
+          >
+            {editMode ? "Save" : "Edit"}
+          </Button>
+          {editMode && (
+            <Button
+              variant="subtle"
+              colorPalette="gray"
+              onClick={onCancel}
+              disabled={isSubmitting}
+            >
+              Cancel
             </Button>
-            {editMode && (
-              <Button
-                variant="subtle"
-                colorPalette="gray"
-                onClick={onCancel}
-                disabled={isSubmitting}
-              >
-                Cancel
-              </Button>
-            )}
-          </Flex>
-        </Box>
-      </Container>
-    </>
+          )}
+        </Flex>
+      </Box>
+    </Container>
   )
 }
 

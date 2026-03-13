@@ -1,16 +1,18 @@
 import { Box, Button, Flex, Text } from "@chakra-ui/react"
-import { Link } from "@tanstack/react-router"
+import { Link, useNavigate } from "@tanstack/react-router"
 import { FaUserAstronaut } from "react-icons/fa"
 import { FiLogOut, FiUser } from "react-icons/fi"
 
-import useAuth from "@/hooks/useAuth"
+import { useAuth } from "@/hooks/useAuth"
 import { MenuContent, MenuItem, MenuRoot, MenuTrigger } from "../ui/menu"
 
 const UserMenu = () => {
-  const { user, logout } = useAuth()
+  const { user, signOut } = useAuth()
+  const navigate = useNavigate()
 
   const handleLogout = async () => {
-    logout()
+    await signOut()
+    navigate({ to: "/login" })
   }
 
   return (
@@ -19,14 +21,14 @@ const UserMenu = () => {
       <Flex>
         <MenuRoot>
           <MenuTrigger asChild p={2}>
-            <Button data-testid="user-menu" variant="solid" maxW="sm" truncate>
+            <Button data-testid="user-menu" variant="ghost" maxW="sm" truncate>
               <FaUserAstronaut fontSize="18" />
-              <Text>{user?.full_name || "User"}</Text>
+              <Text>{user?.user_metadata?.full_name || user?.email || "User"}</Text>
             </Button>
           </MenuTrigger>
 
           <MenuContent>
-            <Link to="settings">
+            <Link to="/settings">
               <MenuItem
                 closeOnSelect
                 value="user-settings"
